@@ -87,7 +87,8 @@ setClass(
 # TODO withProgressBar
 RLBigDataDedup <- function(dataset, identity = NA, blockfld = list(),
                            exclude = numeric(0), strcmp = numeric(0),
-                           strcmpfun = "jarowinkler", phonetic=numeric(0), phonfun = "pho_h")
+                           strcmpfun = "jarowinkler", phonetic=numeric(0), phonfun = "pho_h",
+                           nfetch = 100000, verbose = TRUE)
 {
   # error checking
   if (!is.data.frame(dataset) && !is.matrix(dataset))
@@ -188,7 +189,7 @@ RLBigDataDedup <- function(dataset, identity = NA, blockfld = list(),
                    sql$from_clause, sql$where_clause)
   res <- dbSendQuery(con, query)
   expectedSize <- getExpectedSize(dataset, blockfld)
-  pairsff <- .toFF(res, withProgressBar = (sink.number()==0), expectedSize)
+  pairsff <- .toFF(res, withProgressBar = (sink.number()==0), expectedSize, nfetch, verbose)
 
   dbClearResult(res)
 
@@ -369,9 +370,10 @@ RLBigDataLinkage <- function(dataset1, dataset2, identity1 = NA,
   return(object)
 }
 
-.toFF <- function(res, withProgressBar, expectedSize)
+.toFF <- function(res, withProgressBar, expectedSize, nfetch = 100000, verbose = TRUE)
 {
-  n <- 20000
+  n <- nfetch
+  message('Using nfetch = ', nfetch)
   slice <- fetch(res, n)
   if(nrow(slice)==0) stop("No pairs generated. Check blocking criteria.")
   # expected size can be 0 when there is really 1 record pair, make
@@ -386,13 +388,30 @@ RLBigDataLinkage <- function(dataset1, dataset2, identity1 = NA,
   }
 
   pairsff <- do.call(ffdf, lapply(slice, ff))
-  while(nrow(slice <- fetch(res, n)) > 0)
+  t_start = Sys.time()
+  t_now = t_start
+  loop_cond = nrow(slice <- fetch(res, n)) > 0
+  count = 0
+  while(loop_cond)
   {
+    if(verbose){
+      t_last = t_now
+      t_now = Sys.time()
+      message('nslice = ', nrow(slice), '\tcount = ', count,
+              '\t', capture.output(t_now - t_start), ' from start',
+              '\t', substring(capture.output(t_now - t_last), 19), ' from last itt')
+      count = count + 1
+    }
+
     currentLength <- nrow(pairsff)
+    if(currentLength - (2*nfetch) > .Machine$integer.max){
+      currentLength  = as.double(currentLength)
+    }
     newLength <- currentLength + nrow(slice)
     nrow(pairsff) <- newLength
     pairsff[(currentLength + 1):newLength,] <- slice
     if (withProgressBar) setTxtProgressBar(pgb, newLength)
+    loop_cond = nrow(slice <- fetch(res, n)) > 0
   }
   if (withProgressBar) close(pgb)
   pairsff
