@@ -19,8 +19,9 @@ Collate: register-S3-classes.r RLBigData-classes.r RLResult-class.r
         genSamples.r strcmp.r compare.r getPairs.r summary.r
         em-methods.r internals.r em.r mygllm.r epilink-methods.r
         phonetics.r onAttach.r getPairs-methods.r serialization.r
-        tools.r stochastic.r
+        tools.r stochastic.r RLcheck.R
 Packaged: 2019-02-02 13:17:43 UTC; hornik
 NeedsCompilation: yes
 Repository: CRAN
 Date/Publication: 2019-02-02 16:33:04 UTC
+RoxygenNote: 6.1.1
