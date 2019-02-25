@@ -6,5 +6,6 @@ install.pacakges('remotes')
 remotes::install_github('ari-harmonic/RecordLinkage')
 library('RecordLinkage')
 RLcheck()
+# You are running the correct github version
 ```
 
