@@ -406,8 +406,12 @@ RLBigDataLinkage <- function(dataset1, dataset2, identity1 = NA,
     currentLength <- nrow(pairsff)
     if(currentLength - (2*nfetch) > .Machine$integer.max){
       currentLength  = as.double(currentLength)
+      message('as.double on count = ', count)
     }
     newLength <- currentLength + nrow(slice)
+    if(is.na(newLength)){
+      browser()
+    }
     nrow(pairsff) <- newLength
     pairsff[(currentLength + 1):newLength,] <- slice
     if (withProgressBar) setTxtProgressBar(pgb, newLength)
