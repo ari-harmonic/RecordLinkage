@@ -403,12 +403,8 @@ RLBigDataLinkage <- function(dataset1, dataset2, identity1 = NA,
       count = count + 1
     }
 
-    currentLength <- nrow(pairsff)
-    if(currentLength - (2*nfetch) > .Machine$integer.max){
-      currentLength  = as.double(currentLength)
-      message('as.double on count = ', count)
-    }
-    newLength <- currentLength + nrow(slice)
+    currentLength <- as.double(nrow(pairsff))
+    newLength <- currentLength + as.double(nrow(slice))
     if(is.na(newLength)){
       browser()
     }
